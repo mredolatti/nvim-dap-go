@@ -58,28 +58,30 @@ local function get_arguments()
     end
 end
 
+local function parse_env(input)
+    local env = {}
+    local raw = vim.split(input or "", " ")
+    for _, exp in pairs(raw) do
+        local kv = vim.split(exp or "=", "=")
+        env[kv[1]] = kv[2]
+    end
+    return env
+end
+
 local function get_env()
     local co = coroutine.running()
     if co then
         return coroutine.create(function()
             local env = {}
             vim.ui.input({ prompt = "Env (space-separated): " }, function(input)
-                local raw = vim.split(input or "", " ")
-                for _, exp in pairs(raw) do
-                    local kv = vim.split(exp or "=", "=")
-                    env[kv[1]] = kv[2]
-                end
+                env = parse_env(input)
             end)
             coroutine.resume(co, env)
         end)
     else
         local env = {}
         vim.ui.input({ prompt = "Env (space-separated): " }, function(input)
-            local raw = vim.split(input or "", " ")
-            for _, exp in pairs(raw) do
-                local kv = vim.split(exp or "=", "=")
-                env[kv[1]] = kv[2]
-            end
+            env = parse_env(input)
         end)
         return env
     end
